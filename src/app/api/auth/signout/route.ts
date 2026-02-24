@@ -19,7 +19,7 @@ export async function POST() {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    expires: new Date(0), // expire immediately
+    expires: new Date(0),
   });
 
   return NextResponse.json({ ok: true });

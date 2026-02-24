@@ -8,6 +8,20 @@
       "when": 1771264171739,
       "tag": "0000_dark_magik",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1771945091663,
+      "tag": "0001_wise_machine_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771948028990,
+      "tag": "0002_brave_gauntlet",
+      "breakpoints": true
     }
   ]
 }

@@ -35,7 +35,8 @@ export default function Home() {
 
       if (res.status === 401) {
         setLoading(false);
-        router.push("/signin");
+        router.push("/results");
+        router.refresh();
         return;
       }
 

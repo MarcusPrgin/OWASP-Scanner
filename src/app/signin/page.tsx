@@ -6,7 +6,10 @@ import { useMemo, useState } from "react";
 
 export default function SignInPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -14,6 +17,10 @@ export default function SignInPage() {
     const v = email.trim().toLowerCase();
     return v.includes("@") && v.includes(".") && v.length >= 6;
   }, [email]);
+
+  const passwordOk = useMemo(() => password.length >= 4, [password]);
+
+  const formOk = emailOk && passwordOk;
 
   async function submit() {
     setErr(null);
@@ -23,21 +30,32 @@ export default function SignInPage() {
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
       });
 
+      const raw = await res.text().catch(() => "");
+      console.log("SIGNIN RESPONSE:", res.status, raw);
+
       if (!res.ok) {
-        const msg = await res.json().catch(() => null);
-        throw new Error(msg?.error ?? "Please enter a valid email.");
+        let msg: any = null;
+        try { msg = JSON.parse(raw); } catch {}
+        throw new Error(msg?.error ?? raw ?? `Sign in failed (${res.status})`);
       }
 
-      router.push("/");
-      router.refresh();
+      console.log("REDIRECTING TO /dashboard");
+      window.location.href = "/dashboard";
+      return;
     } catch (e: any) {
+      console.log("SIGNIN ERROR:", e);
       setErr(e?.message ?? "Sign in failed.");
+    } finally {
       setLoading(false);
     }
   }
+
 
   return (
     <main style={styles.page}>
@@ -56,7 +74,8 @@ export default function SignInPage() {
         <div style={styles.card}>
           <h1 style={styles.h1}>Sign in</h1>
           <p style={styles.sub}>
-            Use your email to access <strong>My Results</strong> and keep your scan history.
+            Use your email and password to access <strong>My Results</strong> and keep your scan
+            history.
           </p>
 
           <label style={styles.label}>Email</label>
@@ -68,7 +87,7 @@ export default function SignInPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && emailOk && !loading) submit();
+                if (e.key === "Enter" && formOk && !loading) submit();
               }}
               placeholder="you@domain.com"
               style={styles.input}
@@ -78,15 +97,33 @@ export default function SignInPage() {
             />
           </div>
 
+          <label style={{ ...styles.label, marginTop: 12, display: "block" }}>Password</label>
+          <div style={styles.inputWrap}>
+            <span style={styles.inputIcon} aria-hidden>
+              🔒
+            </span>
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && formOk && !loading) submit();
+              }}
+              placeholder="At least 4 characters"
+              style={styles.input}
+              type="password"
+              autoComplete="current-password"
+            />
+          </div>
+
           {err && <div style={styles.error}>{err}</div>}
 
           <button
             onClick={submit}
-            disabled={!emailOk || loading}
+            disabled={!formOk || loading}
             style={{
               ...styles.btn,
-              opacity: !emailOk || loading ? 0.55 : 1,
-              cursor: !emailOk || loading ? "not-allowed" : "pointer",
+              opacity: !formOk || loading ? 0.55 : 1,
+              cursor: !formOk || loading ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "Signing in…" : "Continue"}
@@ -96,7 +133,7 @@ export default function SignInPage() {
           </button>
 
           <div style={styles.metaRow}>
-            <span style={styles.metaText}>MVP auth: email-only (no password).</span>
+            <span style={styles.metaText}>MVP auth: email + password.</span>
             <Link href="/" style={styles.metaLink}>
               Back home
             </Link>
@@ -112,7 +149,9 @@ export default function SignInPage() {
         </div>
 
         <div style={styles.footer}>
-          <span style={{ opacity: 0.7 }}>By signing in, you agree to run scans only on systems you own or have permission to test.</span>
+          <span style={{ opacity: 0.7 }}>
+            By signing in, you agree to run scans only on systems you own or have permission to test.
+          </span>
         </div>
       </div>
     </main>

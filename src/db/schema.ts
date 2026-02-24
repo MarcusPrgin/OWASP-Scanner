@@ -7,6 +7,7 @@ export const users = sqliteTable("users", {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
+  passwordHash: text("password_hash").notNull(),
 });
 
 // SESSIONS
@@ -20,21 +21,18 @@ export const sessions = sqliteTable("sessions", {
   expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
 });
 
-// SCANS
 export const scans = sqliteTable("scans", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   url: text("url").notNull(),
   userId: integer("user_id").notNull(),
-  status: text("status", { enum: ["queued", "running", "done", "error"] })
+
+  // ✅ allow these exact statuses
+  status: text("status", { enum: ["queued", "running", "done", "failed"] })
     .notNull()
     .default("queued"),
+
   progress: integer("progress").notNull().default(0),
-  errorMessage: text("error_message"),
-  startedAt: integer("started_at", { mode: "timestamp_ms" }),
-  finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+  createdAt: integer("created_at").notNull().default(Date.now()),
 });
 
 // FINDINGS
